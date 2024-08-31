@@ -37,7 +37,7 @@ class Box:
         self.queued = False
         self.visited = False
         self.neighbours = []
-        self.frontier_cells = []
+        self.frontier_boxes = []
 
     def __lt__(self, other):
         return self.x < other.x
@@ -55,39 +55,26 @@ class Box:
         self.neighbours = []
         n = []
 
-        if self.x > 0 and not grid[self.x - 1][self.y].wall:
-            n.append(grid[self.x - 1][self.y])
-        
-        if self.x < columns - 1 and not grid[self.x + 1][self.y].wall:
-            n.append(grid[self.x + 1][self.y])
-
-        if self.y > 0 and not grid[self.x][self.y - 1].wall:
-            n.append(grid[self.x][self.y - 1])
-        
-        if self.y < rows - 1 and not grid[self.x][self.y + 1].wall:
-            n.append(grid[self.x][self.y + 1])
+        adjacent_boxes = [(self.x-1, self.y), (self.x+1, self.y), (self.x, self.y-1), (self.x, self.y+1)]
+        for r, c in adjacent_boxes:
+            if r in range(rows) and c in range(columns) and not grid[r][c].wall:
+                n.append(grid[r][c])
         
         random.shuffle(n)
         self.neighbours.extend(n)
 
     # Used for maze generation
-    def set_frontier_cells(self):
+    def set_frontier_boxes(self):
+        self.frontier_boxes = []
         n = []
 
-        if self.x > 1 and grid[self.x - 2][self.y].wall:
-            n.append(grid[self.x - 2][self.y])
-        
-        if self.x < columns - 2 and grid[self.x + 2][self.y].wall:
-            n.append(grid[self.x + 2][self.y])
-
-        if self.y > 1 and grid[self.x][self.y - 2].wall:
-            n.append(grid[self.x][self.y - 2])
-        
-        if self.y < rows - 2 and grid[self.x][self.y + 2].wall:
-            n.append(grid[self.x][self.y + 2])
+        adjacent_boxes = [(self.x-2, self.y), (self.x+2, self.y), (self.x, self.y-2), (self.x, self.y+2)]
+        for r, c in adjacent_boxes:
+            if r in range(rows) and c in range(columns) and grid[r][c].wall:
+                n.append(grid[r][c])
         
         random.shuffle(n)
-        self.frontier_cells.extend(n)
+        self.frontier_boxes.extend(n)
 
 
 # Variation of Prim's algorithm for maze generation
@@ -104,29 +91,29 @@ def generate_maze(grid):
     c = random.randint(0, columns-1)
     visited.add((r, c))
 
-    total_frontier_cells = set()
-    grid[r][c].set_frontier_cells()
+    total_frontier_boxes = set()
+    grid[r][c].set_frontier_boxes()
     grid[r][c].wall = False
-    total_frontier_cells.update(grid[r][c].frontier_cells)
+    total_frontier_boxes.update(grid[r][c].frontier_boxes)
 
-    while total_frontier_cells:
-        # Picking random frontier cell
-        frontier = random.choice(list(total_frontier_cells))
+    while total_frontier_boxes:
+        # Picking random frontier box
+        frontier = random.choice(list(total_frontier_boxes))
         r, c = frontier.x, frontier.y
 
-        # Randomly connecting the frontier to a visited cell
-        moves = [(r-2, c, r-1, c), (r+2, c, r+1, c), (r, c-2, r, c-1), (r, c+2, r, c+1)]
-        random.shuffle(moves)
+        # Randomly connecting the frontier to a visited box
+        frontier_boxes = [(r-2, c, r-1, c), (r+2, c, r+1, c), (r, c-2, r, c-1), (r, c+2, r, c+1)]
+        random.shuffle(frontier_boxes)
 
-        for r1, c1, r2, c2 in moves:
+        for r1, c1, r2, c2 in frontier_boxes:
             if r1 in range(rows) and c1 in range(columns) and not grid[r1][c1].wall:
                 grid[r2][c2].wall = False
                 break
 
-        frontier.set_frontier_cells()
+        frontier.set_frontier_boxes()
         frontier.wall = False
-        total_frontier_cells.update(frontier.frontier_cells)
-        total_frontier_cells.remove(grid[r][c])
+        total_frontier_boxes.update(frontier.frontier_boxes)
+        total_frontier_boxes.remove(grid[r][c])
 
     for c in range(columns):
         for r in range(rows):
@@ -282,9 +269,9 @@ def main():
                     if grid[r][c].wall:
                         grid[r][c].wall = False
 
-                        # Updating neighbours of adjacent cells
-                        adjacent = [(r-1, c), (r+1, c), (r, c-1), (r, c+1)]
-                        for r2, c2 in adjacent:
+                        # Updating neighbours of adjacent boxes
+                        adjacent_boxes = [(r-1, c), (r+1, c), (r, c-1), (r, c+1)]
+                        for r2, c2 in adjacent_boxes:
                             if r2 in range(rows) and c2 in range(columns):
                                 grid[r2][c2].set_neighbours()
 
