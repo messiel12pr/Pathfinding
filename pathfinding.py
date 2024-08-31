@@ -137,15 +137,10 @@ def generate_maze(grid):
 for c in range(columns):
     grid.append([Box(c, r) for r in range(rows)])
 
-for c in range(columns):
-    for r in range(rows):
-        grid[c][r].set_neighbours()
-
 generate_maze(grid)
 
 
 # Pathfinding Algorithms
-global queue
 queue = []
 def bfs(target_box):
     current_box = queue.pop(0)
@@ -162,7 +157,6 @@ def bfs(target_box):
     return False
 
 
-global stack
 stack = []
 def dfs(target_box):
     current_box = stack.pop()
@@ -182,7 +176,6 @@ def dfs(target_box):
 def man_distance(a, b):
     return abs(a.x - b.x) + abs(a.y - b.y)
 
-global pq 
 pq = []
 heapq.heapify(pq)
 def greedy_search(target_box):
@@ -200,7 +193,6 @@ def greedy_search(target_box):
     return False
 
 
-global cost_so_far
 cost_so_far = dict()
 def a_star(target_box):
     p, current_box = heapq.heappop(pq)
@@ -220,6 +212,14 @@ def a_star(target_box):
     
     return False
 
+
+GREY = (128, 128, 128)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+D_BLUE = (69, 123, 157)
+L_BLUE = (168, 218, 220)
+GREEN = (56, 176, 0)
+RED = (230, 57, 70)
 
 def main():
     begin_search = False
@@ -281,8 +281,11 @@ def main():
 
                     if grid[r][c].wall:
                         grid[r][c].wall = False
-                        for r2 in range(r-1, r+2):
-                            for c2 in range(c-1, c+2):
+
+                        # Updating neighbours of adjacent cells
+                        adjacent = [(r-1, c), (r+1, c), (r, c-1), (r, c+1)]
+                        for r2, c2 in adjacent:
+                            if r2 in range(rows) and c2 in range(columns):
                                 grid[r2][c2].set_neighbours()
 
             # Start/Reset Algorithm
@@ -326,27 +329,27 @@ def main():
                 searching = not a_star(target_box)
 
 
-        window.fill((128, 128, 128))
+        window.fill(GREY)
 
         for c in range(columns):
             for r in range(rows):
                 box = grid[c][r]
-                box.draw(window, (255, 255, 255)) 
+                box.draw(window, WHITE) 
 
                 if box.queued:
-                    box.draw(window, (69, 123, 157))
+                    box.draw(window, D_BLUE)
 
                 if box.visited:
-                    box.draw(window, (168, 218, 220)) 
+                    box.draw(window, L_BLUE) 
 
                 if box.start:
-                    box.draw(window, (56, 176, 0))
+                    box.draw(window, GREEN)
 
                 if box.wall:
-                    box.draw(window, (0, 0, 0))
+                    box.draw(window, BLACK)
 
                 if box.target:
-                    box.draw(window, (230, 57, 70)) 
+                    box.draw(window, RED) 
 
         time.sleep(0.005)              
         pygame.display.flip()
